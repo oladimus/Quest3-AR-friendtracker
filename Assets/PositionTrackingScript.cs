@@ -3,11 +3,14 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using TMPro;
 
 public class PhonePositionReceiver : MonoBehaviour
 {
     public int listenPort = 9050;
     public Transform phoneTracker; // The object that will follow the phone
+    public Transform playerHead; // Quest3 position
+    public TextMeshProUGUI distanceText;
     private UdpClient udpClient;
     private Thread receiveThread;
     private volatile bool running = true;
@@ -17,6 +20,11 @@ public class PhonePositionReceiver : MonoBehaviour
 
     void Start()
     {
+        if (playerHead == null && Camera.main != null)
+        {
+            playerHead = Camera.main.transform;
+        }
+
         udpClient = new UdpClient(listenPort);
         receiveThread = new Thread(ReceiveData);
         receiveThread.IsBackground = true;
@@ -30,6 +38,13 @@ public class PhonePositionReceiver : MonoBehaviour
             phoneTracker.position = latestPosition;
             phoneTracker.rotation = latestRotation;
         }
+
+        if (phoneTracker != null && playerHead != null)
+        {
+            float distance = Vector3.Distance(playerHead.position, phoneTracker.position);
+            distanceText.text = $"Distance to Friend: {distance:F2} m";
+        }
+
     }
 
     void ReceiveData()
